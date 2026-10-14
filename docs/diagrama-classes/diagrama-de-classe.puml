@@ -1,0 +1,48 @@
+@startuml
+
+class Usuario {
+  - id
+  - nome
+  - email
+  - senha
+
+  + criarPost()
+  + editarPost()
+  + removerPost()
+  + visualizarDashboard()
+}
+
+class Post {
+  - id
+  - titulo
+  - legenda
+  - dataPostagem
+  - tipoConteudo
+  - status
+  - alcance
+
+  + alterarStatus()
+}
+
+class Calendario {
+  - mes
+  - ano
+
+  + adicionarPost()
+  + removerPost()
+  + listarPosts()
+}
+
+class Dashboard {
+  + gerarResumo()
+  + calcularPostsPorStatus()
+  + calcularAlcanceTotal()
+}
+
+Usuario "1" -- "*" Post : cria
+
+Calendario "1" -- "*" Post : organiza
+
+Dashboard "1" ..> "*" Post : analisa
+
+@enduml
