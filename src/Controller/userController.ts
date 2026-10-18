@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import jwtGenerate from "../utils/jwtGenerate.js";
+import { hashPassword, verifyPassword } from "../utils/passCrypted.js";
 
 class userController {
 
@@ -20,9 +21,14 @@ class userController {
       return res.status(400).json({error: "Usuário não está cadastrado!"})
     }
 
-    const token = await jwtGenerate(emailExist[0].id, emailExist[0].email, emailExist[0].name); 
 
     try{
+      const passwordMatch = await verifyPassword(password, emailExist[0].password); 
+      if(!passwordMatch) {
+        return res.status(400).json({error: "Senha incorreta!"})
+      }
+
+      const token = await jwtGenerate(emailExist[0].id, emailExist[0].email, emailExist[0].name); 
       return res.status(200).json({message: "Usuário logado", token, name: emailExist[0].name});
     }catch(error){
       return res.status(400).json(error);
@@ -60,11 +66,13 @@ class userController {
     }
 
     try {
+      const passwordHashed = await hashPassword(password);
+
       const user = await prisma.user.create({
         data: {
             name,
             email,
-            password,
+            password: passwordHashed,
         },
       });
 
