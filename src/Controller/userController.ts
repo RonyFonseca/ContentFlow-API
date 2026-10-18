@@ -37,7 +37,6 @@ class userController {
   }
 
 
-
   async createUser(req: any, res: any) {
     const {name, email, password} = req.body; 
 
