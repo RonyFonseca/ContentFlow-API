@@ -16,7 +16,6 @@ export default async function jwtValidate(req: any, res: any, next: any){
         return next();
     }catch(error){
         return res.status(400).json({error:"Token inválido!"})
-
     }
 
 
