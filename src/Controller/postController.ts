@@ -2,7 +2,7 @@ import prisma from "../lib/prisma.js";
 
 class postController {
     async getAllPostsById(req: any, res: any) {
-        const userId = req.user.userId; // Log the user ID to verify it's being passed correctly
+        const userId = req.user.userId; 
 
         const posts = await prisma.post.findMany({
             where: {
@@ -14,7 +14,7 @@ class postController {
     async createPost(req: any, res: any) {
         const {title, content, type, status, date} = req.body;
 
-        const userId = req.user.userId; // Log the user ID to verify it's being passed correctly
+        const userId = req.user.userId;
 
         if(!title || !content || !type || !status || !date) {
             return res.status(400).json({ error: "Falta informação!"});
@@ -76,8 +76,6 @@ class postController {
         if(!postExist) {
             return res.status(404).json({ error: "Post não encontrado no banco de dados!"});
         }
-
-        //validar se o post é meu
 
         try {
             await prisma.post.delete({
