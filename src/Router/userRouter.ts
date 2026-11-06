@@ -90,30 +90,5 @@ router.post('/login', userControllerInstance.loginUser);
  */
 router.post('/createUser', userControllerInstance.createUser);
 
-/**
- * @swagger
- * /deleteUser/{id}:
- *   delete:
- *     summary: Excluir usuário
- *     description: Remove um usuário pelo seu ID.
- *     tags: [Usuários]
- *
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do usuário
- *
- *     responses:
- *       200:
- *         description: Usuário removido com sucesso
- *       404:
- *         description: Usuário não encontrado
- *       500:
- *         description: Erro interno
- */
-router.delete('/deleteUser/:id', userControllerInstance.deleteUser);
 
 export default router;
