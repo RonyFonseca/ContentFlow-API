@@ -1,7 +1,9 @@
 
 import express from 'express';
 import postController from '../Controller/postController.js';
-import middleware from '../midleware/jwtValidate.js';
+import jwt from '../midleware/jwtValidate.js';
+import {upload} from '../midleware/upload.js';
+import { uploadImage } from '../use-cases/upload/UploadImage.js';
 
 const router = express.Router();
 const postControllerInstance = new postController();
@@ -32,7 +34,7 @@ const postControllerInstance = new postController();
  */
 router.get(
   '/getAllPostsById',
-  middleware,
+  jwt,
   postControllerInstance.getAllPostsById
 );
 
@@ -57,7 +59,7 @@ router.get(
  */
 router.post(
   '/createPost',
-  middleware,
+  jwt,
   postControllerInstance.createPost
 );
 
@@ -106,7 +108,7 @@ router.patch(
  *       200:
  *         description: Publicação removida
  *       404:
- *         description: Publicação não encontrada
+ *         description: Publicação não encontradamiddleware
  *       500:
  *         description: Erro interno
  */
@@ -115,4 +117,30 @@ router.delete(
   postControllerInstance.deletePost
 );
 
+
+router.post(
+  '/upload-test',
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: 'Nenhuma imagem enviada!',
+        });
+      }
+
+      const result = await uploadImage(req.file);
+
+      return res.status(200).json(result);
+    } catch (error) {
+  console.error('Erro no upload:', error);
+
+  return res.status(500).json({
+    message: error instanceof Error
+      ? error.message
+      : 'Erro desconhecido',
+  });
+}
+  }
+);
 export default router;
