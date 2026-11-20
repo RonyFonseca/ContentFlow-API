@@ -4,6 +4,8 @@ import DeletePost from "../use-cases/post/DeletePost.js";
 import UpdatePostStatus from "../use-cases/post/UpdatePostStatus.js";
 
 import AppError from "../utils/AppError.js";
+import { uploadImage } from "../use-cases/img/UploadImage.js";
+import CreateImage from "../use-cases/img/CreateImage.js";
 
 class postController {
     async getAllPostsById(req: any, res: any) {
@@ -20,6 +22,9 @@ class postController {
         const userId = req.user.userId;
 
         try {
+            const image = req.file;
+            const imageUploadResult = await uploadImage(image);
+
             const post = await CreatePost({
                 title,
                 content,
@@ -28,6 +33,14 @@ class postController {
                 type,
                 date,
             });
+
+            await CreateImage({
+                path: imageUploadResult.path,
+                mimeType: image.mimetype,
+                size: image.size,
+                postId: post.id
+            });
+
             return res.status(201).json({ message: "Post criado com sucesso!", post });
         } catch (error) {
             if (error instanceof AppError) {
