@@ -15,7 +15,7 @@ class postController {
     }
 
     async createPost(req: any, res: any) {
-        const {title, content, type, status, date} = req.body;
+        const {title, content, type, status, date, categoryId} = req.body;
 
         const userId = req.user.userId;
 
@@ -27,6 +27,7 @@ class postController {
                 status,
                 type,
                 date,
+                categoryId,
             });
             return res.status(201).json({ message: "Post criado com sucesso!", post });
         } catch (error) {

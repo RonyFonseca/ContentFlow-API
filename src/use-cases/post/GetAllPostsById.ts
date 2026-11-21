@@ -5,6 +5,9 @@ export default async function GetAllPostsById(userId: string) {
         where: {
             userId,
         },
+        include: {
+            category: true,
+        },
     });
 
     return posts;
