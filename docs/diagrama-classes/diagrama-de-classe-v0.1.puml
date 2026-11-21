@@ -1,0 +1,56 @@
+
+@startuml
+
+class Usuario {
+  - id
+  - nome
+  - email
+  - senha
+
+  + criarPost()
+  + gerenciarIdeias()
+  + gerenciarCategorias()
+}
+
+class Post {
+  - id
+  - titulo
+  - legenda
+  - dataPostagem
+  - tipoConteudo
+  - status
+
+  + criar()
+  + editar()
+  + excluir()
+}
+
+class Ideia {
+  - id
+  - titulo
+  - descricao
+  - dataCriacao
+  - status
+
+  + criar()
+  + editar()
+  + excluir()
+}
+
+class Categoria {
+  - id
+  - nome
+  - descricao
+  - idUser
+
+  + criar()
+  + editar()
+  + excluir()
+}
+
+Usuario "1" -- "0..*" Post : gerencia
+Usuario "1" -- "0..*" Ideia : gerencia
+Usuario "1" -- "0..*" Categoria : cria
+Categoria "0..1" -- "0..*" Post : classifica
+
+@enduml
