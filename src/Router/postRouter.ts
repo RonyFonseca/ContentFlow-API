@@ -90,6 +90,50 @@ router.patch(
 
 /**
  * @swagger
+ * /posts/{idPost}/category:
+ *   patch:
+ *     summary: Alterar a categoria de uma publicação
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idPost
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID da publicação
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [categoryId]
+ *             properties:
+ *               categoryId:
+ *                 type: string
+ *                 nullable: true
+ *                 description: ID da categoria, ou null para remover
+ *
+ *     responses:
+ *       200:
+ *         description: Categoria atualizada
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Usuário não autenticado
+ *       404:
+ *         description: Publicação ou categoria não encontrada
+ */
+router.patch(
+  '/posts/:idPost/category',
+  middleware,
+  postControllerInstance.updatePostCategory
+);
+
+/**
+ * @swagger
  * /posts/{idPost}/delete:
  *   delete:
  *     summary: Remover uma publicação
