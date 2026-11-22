@@ -45,7 +45,14 @@ class postController {
     }   
 
     async createPost(req: any, res: any) {
-        const {title, content, type, status, date, categoryId} = req.body;
+        const {
+            title,
+            content,
+            type,
+            status,
+            date,
+            categoryName
+        } = req.body;
 
         const userId = req.user.userId;
 
@@ -60,7 +67,7 @@ class postController {
                 status,
                 type,
                 date,
-                categoryId,
+                categoryName,
             });
 
             await CreateImage({
@@ -70,24 +77,32 @@ class postController {
                 postId: post.id
             });
 
-            return res.status(201).json({ message: "Post criado com sucesso!", post });
+            return res.status(201).json({
+                message: "Post criado com sucesso!",
+                post
+            });
+
         } catch (error) {
             if (error instanceof AppError) {
-                return res.status(error.statusCode).json({ error: error.message });
+                return res.status(error.statusCode).json({
+                    error: error.message
+                });
             }
+
             console.error("Erro ao criar post:", error);
 
-            return res.status(500).json({ 
-                error: error,
+            return res.status(500).json({
+                error: "Erro interno ao criar post."
             });
         }
-    }
+}
 
     async deletePost(req: any, res: any) {
         const {idPost} = req.params;
+        const userId = req.user.userId;
 
         try {
-            await DeletePost({ idPost });
+            await DeletePost({idPost, userId});
 
             return res.status(200).json({ 
                 message: "Post deletado com sucesso!" 

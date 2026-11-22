@@ -1,33 +1,47 @@
-import prisma from "../../lib/prisma.js";
-import AppError from "../../utils/AppError.js";
+import prisma from '../../lib/prisma.js';
+import { supabase } from '../../lib/supabase.js';
+import AppError from '../../utils/AppError.js';
 
-type DeletePostData = {
+interface DeletePostData {
     idPost: string;
-};
+    userId: string;
+}
 
 export default async function DeletePost(data: DeletePostData) {
-    const { idPost } = data;
 
-    if (!idPost) {
-        throw new AppError("O ID do post é obrigatório!", 400);
-    }
-
-    const postExist = await prisma.post.findUnique({
+    const post = await prisma.post.findFirst({
         where: {
-            id: idPost,
+            id: data.idPost,
+            userId: data.userId,
+        },
+        include: {
+            images: true,
         },
     });
 
-    if (!postExist) {
-        throw new AppError(
-            "Post não encontrado no banco de dados!",
-            404
-        );
+    if (!post) {
+        throw new AppError('Post não encontrado!', 404);
+    }
+
+
+    const imagePaths = post.images.map(image => image.path);
+
+    if (imagePaths.length > 0) {
+        const { error } = await supabase.storage
+            .from('content-img')
+            .remove(imagePaths);
+
+        if (error) {
+            throw new AppError(
+                `Erro ao excluir imagens: ${error.message}`,
+                500
+            );
+        }
     }
 
     await prisma.post.delete({
         where: {
-            id: idPost,
+            id: data.idPost,
         },
     });
 }

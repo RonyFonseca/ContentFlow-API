@@ -3,7 +3,6 @@ import express from 'express';
 import postController from '../Controller/postController.js';
 import jwt from '../midleware/jwtValidate.js';
 import {upload} from '../midleware/upload.js';
-import { uploadImage } from '../use-cases/img/UploadImage.js';
 
 const router = express.Router();
 const postControllerInstance = new postController();
@@ -38,7 +37,30 @@ router.get(
   postControllerInstance.getAllPostsById
 );
 
-
+/**
+ * @swagger
+ * /posts/{idPost}:
+ *   get:
+ *     summary: Buscar uma publicação por ID
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idPost
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID da publicação
+ *
+ *     responses:
+ *       200:
+ *         description: Publicação encontrada
+ *       401:
+ *         description: Usuário não autenticado
+ *       404:
+ *         description: Publicação não encontrada
+ */
 router.get(
   '/posts/:idPost',
   jwt,
@@ -137,7 +159,7 @@ router.patch(
  */
 router.patch(
   '/posts/:idPost/category',
-  middleware,
+  jwt,
   postControllerInstance.updatePostCategory
 );
 
@@ -164,7 +186,7 @@ router.patch(
  *         description: Erro interno
  */
 router.delete(
-  '/posts/:idPost/delete',
+  '/posts/:idPost/delete',jwt,
   postControllerInstance.deletePost
 );
 
