@@ -1,5 +1,6 @@
 import prisma from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
+import CreateCategory from "../category/CreateCategory.js";
 
 type CreatePostData = {
     title: string;
@@ -8,10 +9,19 @@ type CreatePostData = {
     status: string;
     date: any;
     userId: string;
+    categoryName?: string;
 };
 
 export default async function CreatePost(data: CreatePostData) {
-    const { title, content, type, status, date, userId } = data;
+    const {
+        title,
+        content,
+        type,
+        status,
+        date,
+        userId,
+        categoryName
+    } = data;
 
     if (!title || !content || !type || !status || !date) {
         throw new AppError("Falta informação!", 400);
@@ -30,16 +40,36 @@ export default async function CreatePost(data: CreatePostData) {
     }
 
     const userExist = await prisma.user.findUnique({
-        where: {
-            id: userId,
-        },
+        where: { id: userId },
     });
 
     if (!userExist) {
         throw new AppError("O autor não existe!", 400);
     }
 
-    const post = await prisma.post.create({
+    let categoryId: string | null = null;
+
+    if (categoryName?.trim()) {
+        const name = categoryName.trim();
+
+        const categoryExist = await prisma.category.findUnique({
+            where: {
+                userId_name: {
+                    userId,
+                    name,
+                },
+            },
+        });
+
+        const category = categoryExist ?? await CreateCategory({
+            name,
+            userId,
+        });
+
+        categoryId = category.id;
+    }
+
+    return prisma.post.create({
         data: {
             title,
             content,
@@ -47,8 +77,7 @@ export default async function CreatePost(data: CreatePostData) {
             status,
             type,
             date,
+            categoryId,
         },
     });
-
-    return post;
 }
