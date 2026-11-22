@@ -5,6 +5,9 @@ import UpdatePostStatus from "../use-cases/post/UpdatePostStatus.js";
 import UpdatePostCategory from "../use-cases/post/UpdatePostCategory.js";
 
 import AppError from "../utils/AppError.js";
+import { uploadImage } from "../use-cases/img/UploadImage.js";
+import CreateImage from "../use-cases/img/CreateImage.js";
+import GetPostById from "../use-cases/post/GetPostById.js";
 
 class postController {
     async getAllPostsById(req: any, res: any) {
@@ -15,12 +18,41 @@ class postController {
         return res.status(200).json({ posts });
     }
 
+    async getPostById(req: any, res: any) {
+        const {idPost} = req.params;
+
+        if (!idPost) {
+            return res.status(400).json({ error: "ID do post não fornecido." });
+        }
+
+        try {
+            const post = await GetPostById({
+                idPost,
+                userId: req.user.userId
+            });
+
+            return res.status(200).json({ post });
+        } catch (error) {
+            if (error instanceof AppError) {
+                return res.status(error.statusCode).json({ error: error.message });
+            }
+            console.error("Erro ao buscar post:", error);
+
+            return res.status(500).json({
+                error: error,
+            });
+        }
+    }   
+
     async createPost(req: any, res: any) {
         const {title, content, type, status, date, categoryId} = req.body;
 
         const userId = req.user.userId;
 
         try {
+            const image = req.file;
+            const imageUploadResult = await uploadImage(image);
+
             const post = await CreatePost({
                 title,
                 content,
@@ -30,6 +62,14 @@ class postController {
                 date,
                 categoryId,
             });
+
+            await CreateImage({
+                path: imageUploadResult.path,
+                mimeType: image.mimetype,
+                size: image.size,
+                postId: post.id
+            });
+
             return res.status(201).json({ message: "Post criado com sucesso!", post });
         } catch (error) {
             if (error instanceof AppError) {

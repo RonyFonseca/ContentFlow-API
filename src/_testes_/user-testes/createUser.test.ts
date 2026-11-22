@@ -13,20 +13,20 @@ const { prismaMock, jwtGenerateMock, hashPasswordMock } = vi.hoisted(() => ({
 }));
 
 // 2. Mock das dependências externas
-vi.mock("../lib/prisma.js", () => ({
+vi.mock("../../lib/prisma.js", () => ({
     default: prismaMock
 }));
 
-vi.mock("../utils/jwtGenerate.js", () => ({
+vi.mock("../../utils/jwtGenerate.js", () => ({
     default: jwtGenerateMock
 }));
 
-vi.mock("../utils/passCrypted.js", () => ({
+vi.mock("../../utils/passCrypted.js", () => ({
     hashPassword: hashPasswordMock
 }));
 
 // 3. Importação do caso de uso
-import CreateUser from "../use-cases/user/CreateUser.js";
+import CreateUser from "../../use-cases/user/CreateUser.js";
 
 describe("CreateUser", () => {
 

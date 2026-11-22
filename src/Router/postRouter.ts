@@ -1,7 +1,9 @@
 
 import express from 'express';
 import postController from '../Controller/postController.js';
-import middleware from '../midleware/jwtValidate.js';
+import jwt from '../midleware/jwtValidate.js';
+import {upload} from '../midleware/upload.js';
+import { uploadImage } from '../use-cases/img/UploadImage.js';
 
 const router = express.Router();
 const postControllerInstance = new postController();
@@ -32,8 +34,15 @@ const postControllerInstance = new postController();
  */
 router.get(
   '/getAllPostsById',
-  middleware,
+  jwt,
   postControllerInstance.getAllPostsById
+);
+
+
+router.get(
+  '/posts/:idPost',
+  jwt,
+  postControllerInstance.getPostById
 );
 
 /**
@@ -57,7 +66,7 @@ router.get(
  */
 router.post(
   '/createPost',
-  middleware,
+  jwt,upload.single('image'),
   postControllerInstance.createPost
 );
 
@@ -150,7 +159,7 @@ router.patch(
  *       200:
  *         description: Publicação removida
  *       404:
- *         description: Publicação não encontrada
+ *         description: Publicação não encontradamiddleware
  *       500:
  *         description: Erro interno
  */
