@@ -38,6 +38,13 @@ router.get(
   postControllerInstance.getAllPostsById
 );
 
+
+router.get(
+  '/posts/:idPost',
+  jwt,
+  postControllerInstance.getPostById
+);
+
 /**
  * @swagger
  * /createPost:
