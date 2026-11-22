@@ -3,6 +3,7 @@ import cors from 'cors';
 
 import userRouter from './Router/userRouter.js';
 import postRouter from './Router/postRouter.js'; 
+import categoryRouter from './Router/categoryRouter.js';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs-swagger/swagger.js';
@@ -29,6 +30,7 @@ app.use(
 
 app.use('/api', userRouter);
 app.use('/api', postRouter);
+app.use('/api', categoryRouter);
 
 
 

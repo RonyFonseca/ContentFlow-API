@@ -2,6 +2,7 @@ import GetAllPostsById from "../use-cases/post/GetAllPostsById.js";
 import CreatePost from "../use-cases/post/CreatePost.js";
 import DeletePost from "../use-cases/post/DeletePost.js";
 import UpdatePostStatus from "../use-cases/post/UpdatePostStatus.js";
+import UpdatePostCategory from "../use-cases/post/UpdatePostCategory.js";
 
 import AppError from "../utils/AppError.js";
 
@@ -15,7 +16,7 @@ class postController {
     }
 
     async createPost(req: any, res: any) {
-        const {title, content, type, status, date} = req.body;
+        const {title, content, type, status, date, categoryId} = req.body;
 
         const userId = req.user.userId;
 
@@ -27,6 +28,7 @@ class postController {
                 status,
                 type,
                 date,
+                categoryId,
             });
             return res.status(201).json({ message: "Post criado com sucesso!", post });
         } catch (error) {
@@ -82,6 +84,31 @@ class postController {
             
             console.error("Erro ao atualizar status do post:", error);
             
+            return res.status(500).json({ 
+                error: error,
+            });
+        }
+    }
+
+    async updatePostCategory(req: any, res: any) {
+        const {idPost} = req.params;
+        const {categoryId} = req.body;
+
+        const userId = req.user.userId;
+
+        try {
+            await UpdatePostCategory({ idPost, categoryId, userId });
+
+            return res.status(200).json({ 
+                message: "Categoria do post atualizada com sucesso!"
+            });
+        } catch (error) {
+            if (error instanceof AppError) {
+                return res.status(error.statusCode).json({ error: error.message });
+            }
+
+            console.error("Erro ao atualizar categoria do post:", error);
+
             return res.status(500).json({ 
                 error: error,
             });
