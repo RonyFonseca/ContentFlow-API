@@ -9,7 +9,7 @@ type CreatePostData = {
     status: string;
     date: string;
     userId: string;
-    ideaId?: string;
+    ideaId?: string | null;
     categoryName: string;
 };
 
@@ -25,6 +25,17 @@ export default async function CreatePost(data: CreatePostData) {
         categoryName
     } = data;
 
+    if (
+        !title?.trim() ||
+        !content?.trim() ||
+        !type?.trim() ||
+        !status?.trim() ||
+        !date?.trim() ||
+        !userId?.trim() ||
+        !categoryName?.trim()
+    ) {
+        throw new AppError("Falta informação!", 400);
+    }
 
     const userExist = await prisma.user.findUnique({
         where: { id: userId },
@@ -33,7 +44,6 @@ export default async function CreatePost(data: CreatePostData) {
     if (!userExist) {
         throw new AppError("O autor não existe!", 404);
     }
-
 
     let category = await prisma.category.findUnique({
         where: {
@@ -44,7 +54,6 @@ export default async function CreatePost(data: CreatePostData) {
         },
     });
 
-
     if (!category) {
         category = await prisma.category.create({
             data: {
@@ -53,7 +62,6 @@ export default async function CreatePost(data: CreatePostData) {
             },
         });
     }
-
 
     return prisma.post.create({
         data: {
@@ -64,8 +72,7 @@ export default async function CreatePost(data: CreatePostData) {
             type,
             date,
             categoryId: category.id,
-            ideaId
+            ideaId: ideaId ?? null
         },
     });
 }
-

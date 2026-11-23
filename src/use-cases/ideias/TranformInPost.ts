@@ -6,15 +6,16 @@ import CreatePost from "../post/CreatePost.js";
 type TransformInPostParams = {
     ideaId: string;
     userId: string;
-    title: string;
-    content: string;
-    image?: string;
     status: string;
     categoryId?: string | null;
 };
 
 export default async function transformInPost(data: TransformInPostParams) {
-    const { ideaId, userId, title, content, status, categoryId } = data;
+    const { ideaId, userId, status, categoryId } = data;
+
+    if (!status?.trim()) {
+        throw new AppError("Falta informação para criar o post!", 400);
+    }
 
     const idea = await prisma.idea.findUnique({
         where: { id: ideaId },
@@ -28,6 +29,12 @@ export default async function transformInPost(data: TransformInPostParams) {
         throw new AppError("Você não tem permissão para transformar essa ideia!", 403);
     }
 
+    if (idea.isPlanned) {
+        throw new AppError("Essa ideia já foi transformada em post!", 400);
+    }
+
+    let categoryName = "Sem categoria";
+
     if (categoryId) {
         const category = await prisma.category.findFirst({
             where: {
@@ -39,24 +46,30 @@ export default async function transformInPost(data: TransformInPostParams) {
         if (!category) {
             throw new AppError("Categoria não encontrada!", 404);
         }
-    }
 
-    if (idea.isPlanned) {
-        return;
+        categoryName = category.name;
+    } else if (idea.categoryId) {
+        const category = await prisma.category.findUnique({
+            where: { id: idea.categoryId },
+        });
+
+        if (category) {
+            categoryName = category.name;
+        }
     }
 
     const post = await CreatePost({
-        title,
-        content,
+        title: idea.title,
+        content: idea.content,
         type: "convert",
         status,
         date: new Date().toISOString(),
         ideaId: idea.id,
         userId,
-        categoryName: categoryId ? (await prisma.category.findUnique({ where: { id: categoryId } }))!.name : "Sem categoria",
+        categoryName,
     });
 
-    if(!post) {
+    if (!post) {
         throw new AppError("Erro ao criar o post a partir da ideia!", 500);
     }
 
@@ -65,5 +78,5 @@ export default async function transformInPost(data: TransformInPostParams) {
         data: { isPlanned: true },
     });
 
-    return post
+    return post;
 }
