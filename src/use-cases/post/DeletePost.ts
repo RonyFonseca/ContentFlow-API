@@ -44,4 +44,11 @@ export default async function DeletePost(data: DeletePostData) {
             id: data.idPost,
         },
     });
+
+    if(post.ideaId) {
+        await prisma.idea.update({
+            where: { id: post.ideaId },
+            data: { isPlanned: false },
+        });
+    }
 }

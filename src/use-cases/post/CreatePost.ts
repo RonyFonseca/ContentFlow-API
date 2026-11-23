@@ -1,15 +1,16 @@
+
 import prisma from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
-import CreateCategory from "../category/CreateCategory.js";
 
 type CreatePostData = {
     title: string;
     content: string;
     type: string;
     status: string;
-    date: any;
+    date: string;
     userId: string;
-    categoryName?: string;
+    ideaId?: string;
+    categoryName: string;
 };
 
 export default async function CreatePost(data: CreatePostData) {
@@ -20,54 +21,39 @@ export default async function CreatePost(data: CreatePostData) {
         status,
         date,
         userId,
+        ideaId,
         categoryName
     } = data;
 
-    if (!title || !content || !type || !status || !date) {
-        throw new AppError("Falta informação!", 400);
-    }
-
-    if (title.length > 40) {
-        throw new AppError("O título está muito longo!", 400);
-    }
-
-    if (content.length > 200) {
-        throw new AppError("O conteúdo está muito longo!", 400);
-    }
-
-    if (type.length > 15) {
-        throw new AppError("O tipo está muito longo!", 400);
-    }
 
     const userExist = await prisma.user.findUnique({
         where: { id: userId },
     });
 
     if (!userExist) {
-        throw new AppError("O autor não existe!", 400);
+        throw new AppError("O autor não existe!", 404);
     }
 
-    let categoryId: string | null = null;
 
-    if (categoryName?.trim()) {
-        const name = categoryName.trim();
+    let category = await prisma.category.findUnique({
+        where: {
+            userId_name: {
+                userId,
+                name: categoryName,
+            },
+        },
+    });
 
-        const categoryExist = await prisma.category.findUnique({
-            where: {
-                userId_name: {
-                    userId,
-                    name,
-                },
+
+    if (!category) {
+        category = await prisma.category.create({
+            data: {
+                name: categoryName,
+                userId,
             },
         });
-
-        const category = categoryExist ?? await CreateCategory({
-            name,
-            userId,
-        });
-
-        categoryId = category.id;
     }
+
 
     return prisma.post.create({
         data: {
@@ -77,7 +63,9 @@ export default async function CreatePost(data: CreatePostData) {
             status,
             type,
             date,
-            categoryId,
+            categoryId: category.id,
+            ideaId
         },
     });
 }
+

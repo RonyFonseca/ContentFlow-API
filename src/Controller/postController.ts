@@ -44,6 +44,7 @@ class postController {
         }
     }   
 
+
     async createPost(req: any, res: any) {
         const {
             title,
@@ -58,7 +59,22 @@ class postController {
 
         try {
             const image = req.file;
-            const imageUploadResult = await uploadImage(image);
+
+            console.log(
+                "Arquivo recebido:",
+                image ? {
+                    originalname: image.originalname,
+                    mimetype: image.mimetype,
+                    size: image.size
+                } : "Nenhuma imagem enviada"
+            );
+
+            let imageUploadResult = null;
+
+            // Só faz upload se uma imagem foi enviada
+            if (image) {
+                imageUploadResult = await uploadImage(image);
+            }
 
             const post = await CreatePost({
                 title,
@@ -70,12 +86,15 @@ class postController {
                 categoryName,
             });
 
-            await CreateImage({
-                path: imageUploadResult.path,
-                mimeType: image.mimetype,
-                size: image.size,
-                postId: post.id
-            });
+            // Só registra a imagem se ela foi enviada
+            if (image && imageUploadResult) {
+                await CreateImage({
+                    path: imageUploadResult.path,
+                    mimeType: image.mimetype,
+                    size: image.size,
+                    postId: post.id
+                });
+            }
 
             return res.status(201).json({
                 message: "Post criado com sucesso!",
@@ -95,7 +114,8 @@ class postController {
                 error: "Erro interno ao criar post."
             });
         }
-}
+    }
+
 
     async deletePost(req: any, res: any) {
         const {idPost} = req.params;
