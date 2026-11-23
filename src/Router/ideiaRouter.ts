@@ -92,11 +92,11 @@ router.get('/getIdeiaById/:id', jwt, ideiaController.getIdeiaById);
  *       500:
  *         description: Erro interno
  */
-router.post('/create', jwt, ideiaController.create);
+router.post('/createIdeia', jwt, ideiaController.create);
 
 /**
  * @swagger
- * /edit/{id}:
+ * /editIdeia/{id}:
  *   put:
  *     summary: Editar ideia
  *     description: Edita uma ideia existente.
@@ -137,11 +137,11 @@ router.post('/create', jwt, ideiaController.create);
  *       500:
  *         description: Erro interno
  */
-router.put('/edit/:id', jwt, ideiaController.edit);
+router.put('/editIdeia/:id', jwt, ideiaController.edit);
 
 /**
  * @swagger
- * /delete/{id}:
+ * /deleteIdeia/{id}:
  *   delete:
  *     summary: Excluir ideia
  *     description: Exclui uma ideia existente.
@@ -163,7 +163,7 @@ router.put('/edit/:id', jwt, ideiaController.edit);
  *       500:
  *         description: Erro interno
  */
-router.delete('/delete/:id', jwt, ideiaController.delete);
+router.delete('/deleteIdeia/:id', jwt, ideiaController.delete);
 
 /**
  * @swagger

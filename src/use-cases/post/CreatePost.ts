@@ -9,6 +9,7 @@ type CreatePostData = {
     status: string;
     date: string;
     userId: string;
+    ideaId?: string;
     categoryName: string;
 };
 
@@ -20,6 +21,7 @@ export default async function CreatePost(data: CreatePostData) {
         status,
         date,
         userId,
+        ideaId,
         categoryName
     } = data;
 
@@ -62,6 +64,7 @@ export default async function CreatePost(data: CreatePostData) {
             type,
             date,
             categoryId: category.id,
+            ideaId
         },
     });
 }

@@ -1,19 +1,20 @@
 
 import prisma from "../../lib/prisma.js";
 import AppError from "../../utils/AppError.js";
+import CreatePost from "../post/CreatePost.js";
 
 type TransformInPostParams = {
     ideaId: string;
     userId: string;
-    status: string;
-    type: string;
-    date: string;
+    title: string;
+    content: string;
     image?: string;
+    status: string;
     categoryId?: string | null;
 };
 
 export default async function transformInPost(data: TransformInPostParams) {
-    const { ideaId, userId, status, type, date, categoryId } = data;
+    const { ideaId, userId, title, content, status, categoryId } = data;
 
     const idea = await prisma.idea.findUnique({
         where: { id: ideaId },
@@ -25,10 +26,6 @@ export default async function transformInPost(data: TransformInPostParams) {
 
     if (idea.userId !== userId) {
         throw new AppError("Você não tem permissão para transformar essa ideia!", 403);
-    }
-
-    if (!status || !type || !date) {
-        throw new AppError("Falta informação para criar o post!", 400);
     }
 
     if (categoryId) {
@@ -44,20 +41,29 @@ export default async function transformInPost(data: TransformInPostParams) {
         }
     }
 
-    return prisma.$transaction(async (tx) => {
-        const post = await tx.post.create({
-            data: {
-                title: idea.title,
-                content: idea.content,
-                status,
-                type,
-                date,
-                userId,
-                categoryId: categoryId ?? idea.categoryId,
-                ideaId: idea.id,
-            },
-        });
+    if (idea.isPlanned) {
+        return;
+    }
 
-        return post;
+    const post = await CreatePost({
+        title,
+        content,
+        type: "convert",
+        status,
+        date: new Date().toISOString(),
+        ideaId: idea.id,
+        userId,
+        categoryName: categoryId ? (await prisma.category.findUnique({ where: { id: categoryId } }))!.name : "Sem categoria",
     });
+
+    if(!post) {
+        throw new AppError("Erro ao criar o post a partir da ideia!", 500);
+    }
+
+    await prisma.idea.update({
+        where: { id: idea.id },
+        data: { isPlanned: true },
+    });
+
+    return post
 }

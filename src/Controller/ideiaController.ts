@@ -13,7 +13,7 @@ import { Request, Response } from "express";
 export default class IdeiaController {
 
     async getAllIdeiasByUser(req: Request, res: Response) {
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
         const ideias = await GetAllIdeiasByUser({ userId });
 
@@ -22,23 +22,21 @@ export default class IdeiaController {
 
     async getIdeiaById(req: Request, res: Response) {
         const ideiaId = req.params.id;
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
-        const ideia = await getIdeiaById({ userId });
+        const ideia = await getIdeiaById({  userId, ideiaId });
 
-        const ideiaById = ideia.find((i) => i.id === ideiaId);
-
-        if (!ideiaById) {
+         if (!ideia) {
             return res.status(404).json({ message: "Ideia not found" });
         }
 
-        return res.status(200).json(ideiaById);
+        return res.status(200).json(ideia);
     }
 
 
     async create(req: Request, res: Response) {
         const { title, content } = req.body;
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
         const ideia = await CreateIdeia({ title, content, userId });
 
@@ -48,16 +46,16 @@ export default class IdeiaController {
     async edit(req: Request, res: Response) {
         const { title, content } = req.body;
         const ideiaId = req.params.id;
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
-        const ideia = await EditIdeia({ ideiaId, title, content, userId });
+        const ideia = await EditIdeia({ ideiaId, title, content, userId});
 
         return res.status(200).json(ideia);
     }
 
     async delete(req: Request, res: Response) {
         const ideiaId = req.params.id;
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
         await DeleteIdeia({ ideiaId, userId });
 
@@ -69,7 +67,7 @@ export default class IdeiaController {
     async transformInPost(req: Request, res: Response) {
         const { type, status, date, categoryId } = req.body;
         const ideaId = req.params.id;
-        const userId = req.user!.id;
+        const userId = req.user!.userId;
 
         const image = req.file;
 
@@ -82,11 +80,15 @@ export default class IdeiaController {
         const post = await TransformIdeiaIntoPost({
             ideaId,
             userId,
-            status,
-            type,
-            date,
-            categoryId
+            title: req.body.title,
+            content: req.body.content,
+            status: req.body.status
+            
         });
+
+        if(!post) {
+            return res.status(500).json({ message: "Erro ao criar o post a partir da ideia!" });
+        }
 
         if (image && imageUploadResult) {
             await CreateImage({

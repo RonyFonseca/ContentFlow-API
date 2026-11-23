@@ -42,6 +42,7 @@ model Idea {
   title       String
   content     String
   plannedDate DateTime?
+  isPlanned   Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
