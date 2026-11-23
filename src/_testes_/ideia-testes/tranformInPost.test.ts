@@ -1,17 +1,25 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { prismaMock, postCreateMock } = vi.hoisted(() => ({
+const { prismaMock, createPostMock } = vi.hoisted(() => ({
     prismaMock: {
         idea: {
-            findUnique: vi.fn()
+            findUnique: vi.fn(),
+            update: vi.fn()
         },
         category: {
-            findFirst: vi.fn()
+            findFirst: vi.fn(),
+            findUnique: vi.fn(),
+            create: vi.fn()
         },
-        $transaction: vi.fn()
+        user: {
+            findUnique: vi.fn()
+        },
+        post: {
+            create: vi.fn()
+        }
     },
-    postCreateMock: vi.fn()
+    createPostMock: vi.fn()
 }));
 
 vi.mock("../../lib/prisma.js", () => ({
@@ -29,7 +37,8 @@ describe("TransformInPost", () => {
             title: "Minha ideia",
             content: "Conteúdo da ideia",
             userId: "user-123",
-            categoryId: null
+            categoryId: null,
+            isPlanned: false
         });
 
         prismaMock.category.findFirst.mockResolvedValue({
@@ -38,33 +47,37 @@ describe("TransformInPost", () => {
             userId: "user-123"
         });
 
-        postCreateMock.mockResolvedValue({
-            id: "post-123",
-            title: "Minha ideia",
-            content: "Conteúdo da ideia",
-            status: "Planejado",
-            type: "Instagram",
-            date: "2026-11-25",
-            userId: "user-123",
-            categoryId: null,
-            ideaId: "ideia-123"
+        prismaMock.category.findUnique.mockResolvedValue({
+            id: "category-123",
+            name: "Tecnologia",
+            userId: "user-123"
         });
 
-        prismaMock.$transaction.mockImplementation(async (callback) => {
-            return callback({
-                post: {
-                    create: postCreateMock
-                }
-            });
+        prismaMock.user.findUnique.mockResolvedValue({
+            id: "user-123"
+        });
+
+        prismaMock.category.create.mockResolvedValue({
+            id: "category-123",
+            name: "Sem categoria",
+            userId: "user-123"
+        });
+
+        prismaMock.post.create.mockImplementation(async ({ data }) => ({
+            id: "post-123",
+            ...data
+        }));
+
+        prismaMock.idea.update.mockResolvedValue({
+            id: "ideia-123",
+            isPlanned: true
         });
     });
 
     const validData = {
         ideaId: "ideia-123",
         userId: "user-123",
-        status: "Planejado",
-        type: "Instagram",
-        date: "2026-11-25"
+        status: "Planejado"
     };
 
     it("deve transformar uma ideia em post com sucesso", async () => {
@@ -76,18 +89,23 @@ describe("TransformInPost", () => {
             }
         });
 
-        expect(prismaMock.$transaction).toHaveBeenCalled();
-
-        expect(postCreateMock).toHaveBeenCalledWith({
-            data: {
+        expect(prismaMock.post.create).toHaveBeenCalledWith({
+            data: expect.objectContaining({
                 title: "Minha ideia",
                 content: "Conteúdo da ideia",
                 status: "Planejado",
-                type: "Instagram",
-                date: "2026-11-25",
+                type: "convert",
                 userId: "user-123",
-                categoryId: null,
                 ideaId: "ideia-123"
+            })
+        });
+
+        expect(prismaMock.idea.update).toHaveBeenCalledWith({
+            where: {
+                id: "ideia-123"
+            },
+            data: {
+                isPlanned: true
             }
         });
 
@@ -101,7 +119,7 @@ describe("TransformInPost", () => {
             TransformInPost(validData)
         ).rejects.toThrow("Ideia não encontrada!");
 
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+        expect(prismaMock.post.create).not.toHaveBeenCalled();
     });
 
     it("deve impedir a transformação por outro usuário", async () => {
@@ -114,7 +132,7 @@ describe("TransformInPost", () => {
             "Você não tem permissão para transformar essa ideia!"
         );
 
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+        expect(prismaMock.post.create).not.toHaveBeenCalled();
     });
 
     it("deve lançar erro quando faltar o status", async () => {
@@ -125,29 +143,24 @@ describe("TransformInPost", () => {
             })
         ).rejects.toThrow("Falta informação para criar o post!");
 
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+        expect(prismaMock.post.create).not.toHaveBeenCalled();
     });
 
-    it("deve lançar erro quando faltar o tipo", async () => {
+    it("deve lançar erro quando a ideia já estiver planejada", async () => {
+        prismaMock.idea.findUnique.mockResolvedValue({
+            id: "ideia-123",
+            title: "Minha ideia",
+            content: "Conteúdo da ideia",
+            userId: "user-123",
+            categoryId: null,
+            isPlanned: true
+        });
+
         await expect(
-            TransformInPost({
-                ...validData,
-                type: ""
-            })
-        ).rejects.toThrow("Falta informação para criar o post!");
+            TransformInPost(validData)
+        ).rejects.toThrow("Essa ideia já foi transformada em post!");
 
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
-    });
-
-    it("deve lançar erro quando faltar a data", async () => {
-        await expect(
-            TransformInPost({
-                ...validData,
-                date: ""
-            })
-        ).rejects.toThrow("Falta informação para criar o post!");
-
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+        expect(prismaMock.post.create).not.toHaveBeenCalled();
     });
 
     it("deve validar se a categoria pertence ao usuário", async () => {
@@ -174,7 +187,7 @@ describe("TransformInPost", () => {
             })
         ).rejects.toThrow("Categoria não encontrada!");
 
-        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+        expect(prismaMock.post.create).not.toHaveBeenCalled();
     });
 
     it("deve manter a categoria da ideia quando nenhuma nova categoria for informada", async () => {
@@ -183,12 +196,19 @@ describe("TransformInPost", () => {
             title: "Minha ideia",
             content: "Conteúdo da ideia",
             userId: "user-123",
-            categoryId: "category-antiga"
+            categoryId: "category-antiga",
+            isPlanned: false
+        });
+
+        prismaMock.category.findUnique.mockResolvedValue({
+            id: "category-antiga",
+            name: "Marketing",
+            userId: "user-123"
         });
 
         await TransformInPost(validData);
 
-        expect(postCreateMock).toHaveBeenCalledWith({
+        expect(prismaMock.post.create).toHaveBeenCalledWith({
             data: expect.objectContaining({
                 categoryId: "category-antiga"
             })
@@ -201,7 +221,7 @@ describe("TransformInPost", () => {
             categoryId: "category-123"
         });
 
-        expect(postCreateMock).toHaveBeenCalledWith({
+        expect(prismaMock.post.create).toHaveBeenCalledWith({
             data: expect.objectContaining({
                 categoryId: "category-123"
             })
