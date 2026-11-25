@@ -1,4 +1,3 @@
-
 import prisma from '../../lib/prisma.js';
 import GetImageUrl from '../img/GetImageUrl.js';
 import AppError from '../../utils/AppError.js';
@@ -16,6 +15,7 @@ export default async function GetPostById(data: GetPostByIdData) {
         },
         include: {
             images: true,
+            category: true,
         },
     });
 

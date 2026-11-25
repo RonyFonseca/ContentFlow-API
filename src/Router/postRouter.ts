@@ -32,9 +32,9 @@ const postControllerInstance = new postController();
  *         description: Erro interno
  */
 router.get(
-  '/getAllPostsById',
+  '/getAllPosts',
   jwt,
-  postControllerInstance.getAllPostsById
+  postControllerInstance.getAllPosts
 );
 
 /**
@@ -117,6 +117,38 @@ router.post(
 router.patch(
   '/posts/:idPost/status',
   postControllerInstance.updatePost
+);
+
+/**
+ * @swagger
+ * /posts/{idPost}/edit:
+ *   patch:
+ *     summary: Editar uma publicação
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: idPost
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID da publicação
+ *
+ *     responses:
+ *       200:
+ *         description: Publicação editada
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Usuário não autenticado
+ *       404:
+ *         description: Publicação não encontrada
+ */
+router.patch(
+  '/posts/:idPost/edit',
+  jwt,upload.single('image'),
+  postControllerInstance.editPost
 );
 
 /**
