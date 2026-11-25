@@ -37,9 +37,17 @@ export default async function EditIdeia(data: EditIdeiaData) {
         throw new AppError("Você não tem permissão para editar essa ideia!", 403);
     }
 
-    return prisma.idea.update({
-        where: { id: ideiaId },
-        data: { title, content},
+    await prisma.post.updateMany({
+        where: { ideaId: ideiaId },
+        data: { title, content },
     });
+
+    const ideiaUpdated = await prisma.idea.update({
+        where: { id: ideiaId },
+        data: { title, content },
+    });
+
+  
+    return ideiaUpdated;
 }
 

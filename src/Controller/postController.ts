@@ -1,4 +1,4 @@
-import GetAllPostsById from "../use-cases/post/GetAllPostsById.js";
+import GetAllPosts from "../use-cases/post/GetAllPosts.js";
 import CreatePost from "../use-cases/post/CreatePost.js";
 import DeletePost from "../use-cases/post/DeletePost.js";
 import UpdatePostStatus from "../use-cases/post/UpdatePostStatus.js";
@@ -8,12 +8,13 @@ import AppError from "../utils/AppError.js";
 import { uploadImage } from "../use-cases/img/UploadImage.js";
 import CreateImage from "../use-cases/img/CreateImage.js";
 import GetPostById from "../use-cases/post/GetPostById.js";
+import EditPost from "../use-cases/post/EditPost.js";
 
 class postController {
-    async getAllPostsById(req: any, res: any) {
+    async getAllPosts(req: any, res: any) {
         const userId = req.user.userId; 
 
-        const posts = await GetAllPostsById(userId);
+        const posts = await GetAllPosts(userId);
 
         return res.status(200).json({ posts });
     }
@@ -138,6 +139,63 @@ class postController {
 
             return res.status(500).json({ 
                 error: error,
+            });
+        }
+    }
+
+    async editPost(req: any, res: any) {
+        const {idPost} = req.params;
+        const {
+            title,
+            content,
+            type,
+            status,
+            date,
+            categoryName,
+            ideaId
+        } = req.body;
+
+        const userId = req.user.userId;
+        const img = req.file;
+
+        if (!idPost) {
+            return res.status(400).json({ error: "ID do post não fornecido." });
+        }
+
+        if (!title || !content || !type || !status || !date || !categoryName) {
+            return res.status(400).json({ error: "Faltam informações obrigatórias." });
+        }
+
+
+        try {
+            const post = await EditPost({
+                id: idPost,
+                title,
+                content,
+                type,
+                status,
+                date,
+                userId,
+                categoryName,
+                imageUrl: img ? img.path : undefined,
+                ideaId
+            });
+
+            return res.status(200).json({
+                message: "Post editado com sucesso!",
+                post
+            });
+        } catch (error) {
+            if (error instanceof AppError) {
+                return res.status(error.statusCode).json({ 
+                    error: error.message 
+                });
+            }
+
+            console.error("Erro ao editar post:", error);
+
+            return res.status(500).json({ 
+                error: "Erro interno ao editar post."
             });
         }
     }

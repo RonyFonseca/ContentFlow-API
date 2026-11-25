@@ -64,15 +64,31 @@ export default async function CreatePost(data: CreatePostData) {
     }
 
     return prisma.post.create({
-        data: {
-            title,
-            content,
-            userId,
-            status,
-            type,
-            date,
-            categoryId: category.id,
-            ideaId: ideaId ?? null
-        },
-    });
+    data: {
+        title,
+        content,
+        userId,
+        status,
+        type,
+        date,
+        categoryId: category.id,
+        ideaId: ideaId ?? null,
+
+        images: ideaId
+            ? {
+                connect: await prisma.image.findMany({
+                    where: {
+                        ideaId,
+                    },
+                    select: {
+                        id: true,
+                    },
+                }),
+            }
+            : undefined,
+    },
+    include: {
+        images: true,
+    },
+});
 }
