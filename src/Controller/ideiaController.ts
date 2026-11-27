@@ -80,10 +80,7 @@ export default class IdeiaController {
         const post = await TransformIdeiaIntoPost({
             ideaId,
             userId,
-            title: req.body.title,
-            content: req.body.content,
             status: req.body.status
-            
         });
 
         if(!post) {
